@@ -177,19 +177,40 @@ def launch_game():
     bg_image.set_alpha(128)
     tile = pygame.image.load("assets/tile.png")
     while running:
+        paused = False
         clock.tick(GAME_SPEED)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_UP and snake.direction != "DOWN":
+                if (
+                    event.key == pygame.K_UP
+                    and snake.direction != "DOWN"
+                    and not paused
+                ):
                     snake.direction = "UP"
-                elif event.key == pygame.K_DOWN and snake.direction != "UP":
+                    paused = True
+                elif (
+                    event.key == pygame.K_DOWN
+                    and snake.direction != "UP"
+                    and not paused
+                ):
                     snake.direction = "DOWN"
-                elif event.key == pygame.K_LEFT and snake.direction != "RIGHT":
+                    paused = True
+                elif (
+                    event.key == pygame.K_LEFT
+                    and snake.direction != "RIGHT"
+                    and not paused
+                ):
                     snake.direction = "LEFT"
-                elif event.key == pygame.K_RIGHT and snake.direction != "LEFT":
+                    paused = True
+                elif (
+                    event.key == pygame.K_RIGHT
+                    and snake.direction != "LEFT"
+                    and not paused
+                ):
                     snake.direction = "RIGHT"
+                    paused = True
                 elif event.key == pygame.K_ESCAPE:
                     running = False
 
