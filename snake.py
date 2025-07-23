@@ -2,7 +2,7 @@ import argparse
 import random
 import pygame
 
-FPS = 5
+GAME_SPEED = 7
 WIDTH = 748
 HEIGHT = 612
 TILE_SIZE = 34
@@ -34,6 +34,15 @@ class Snake:
             HEIGHT / TILE_SIZE / 2 - DIRECTIONS[self.direction][1] * 2,
         ]
 
+    def render(self, screen):
+        head_x = self.x_pos[0] * TILE_SIZE
+        head_y = self.y_pos[0] * TILE_SIZE
+        screen.blit(self.head, (head_x, head_y))
+        for i in range(1, len(self.x_pos)):
+            screen.blit(
+                self.body, (self.x_pos[i] * TILE_SIZE, self.y_pos[i] * TILE_SIZE)
+            )
+
     def check_collision(self, new_x, new_y):
         if (
             new_x < 1
@@ -52,26 +61,41 @@ class Snake:
             pygame.quit()
             exit()
 
-    def check_apple_collision(self, ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y):
+    def check_apple_collision(self, green_apple_1, green_apple_2, red_apple):
         # print(new_x, new_y, ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y)
-        if (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (ga_1_x, ga_1_y):
+        if (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (
+            green_apple_1.x,
+            green_apple_1.y,
+        ):
             self.size += 1
             self.grow = True
-            ga_1_x, ga_1_y = generate_new_apple(self, ga_2_x, ga_2_y, ra_1_x, ra_1_y)
-        elif (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (ga_2_x, ga_2_y):
+            green_apple_1.x, green_apple_1.y = generate_new_apple(
+                self, green_apple_2.x, green_apple_2.y, red_apple.x, red_apple.y
+            )
+        elif (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (
+            green_apple_2.x,
+            green_apple_2.y,
+        ):
             self.size += 1
             self.grow = True
-            ga_2_x, ga_2_y = generate_new_apple(self, ga_1_x, ga_1_y, ra_1_x, ra_1_y)
+            green_apple_2.x, green_apple_2.y = generate_new_apple(
+                self, green_apple_1.x, green_apple_1.y, red_apple.x, red_apple.y
+            )
 
-        elif (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (ra_1_x, ra_1_y):
+        elif (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (
+            red_apple.x,
+            red_apple.y,
+        ):
             self.size -= 1
             self.reduce = True
             if self.size < 1:
                 print("Game Over! Snake size reduced to zero.")
                 pygame.quit()
                 exit()
-            ra_1_x, ra_1_y = generate_new_apple(self, ga_2_x, ga_2_y, ga_1_x, ga_1_y)
-        return ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y
+            red_apple.x, red_apple.y = generate_new_apple(
+                self, green_apple_2.x, green_apple_2.y, red_apple.x, red_apple.y
+            )
+        return green_apple_1, green_apple_2, red_apple
 
     def move(self):
         new_x = self.x_pos[0] + DIRECTIONS[self.direction][0]
@@ -91,6 +115,18 @@ class Snake:
         else:
             self.x_pos.pop()
             self.y_pos.pop()
+
+
+class Apple:
+    def __init__(self, x, y, green, red, path):
+        self.x = x
+        self.y = y
+        self.red = red
+        self.green = green
+        self.path = pygame.image.load(path)
+
+    def render(self, screen):
+        screen.blit(self.path, (self.x, self.y))
 
 
 def generate_new_apple(snake, x_1, y_1, x_2, y_2):
@@ -122,25 +158,10 @@ def generate_apples(snake):
     ga_1_x, ga_1_y = generate_new_apple(snake, 500000, 500000, 500000, 500000)
     ga_2_x, ga_2_y = generate_new_apple(snake, ga_1_x, ga_1_y, 500000, 500000)
     ra_1_x, ra_1_y = generate_new_apple(snake, ga_1_x, ga_1_y, ga_2_x, ga_2_y)
-    return ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y
-
-
-def render_apples(
-    green_apple, red_apple, screen, ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y
-):
-    screen.blit(green_apple, (ga_1_x, ga_1_y))
-    screen.blit(green_apple, (ga_2_x, ga_2_y))
-    screen.blit(red_apple, (ra_1_x, ra_1_y))
-
-
-def render_snake(snake, screen):
-    head_x = snake.x_pos[0] * TILE_SIZE
-    head_y = snake.y_pos[0] * TILE_SIZE
-    screen.blit(snake.head, (head_x, head_y))
-    for i in range(1, len(snake.x_pos)):
-        screen.blit(
-            snake.body, (snake.x_pos[i] * TILE_SIZE, snake.y_pos[i] * TILE_SIZE)
-        )
+    green_apple_1 = Apple(ga_1_x, ga_1_y, True, False, "assets/apple_green_32.png")
+    green_apple_2 = Apple(ga_2_x, ga_2_y, True, False, "assets/apple_green_32.png")
+    red_apple = Apple(ra_1_x, ra_1_y, False, True, "assets/apple_red_32.png")
+    return green_apple_1, green_apple_2, red_apple
 
 
 def launch_game():
@@ -151,13 +172,12 @@ def launch_game():
     running = True
     clock = pygame.time.Clock()
     snake = Snake()
-    ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y = generate_apples(snake)
+    green_apple_1, green_apple_2, red_apple = generate_apples(snake)
     bg_image = pygame.image.load("assets/bg-tr.png")
-    green_apple = pygame.image.load("assets/apple_green_32.png")
-    red_apple = pygame.image.load("assets/apple_red_32.png")
     bg_image.set_alpha(128)
     tile = pygame.image.load("assets/tile.png")
     while running:
+        clock.tick(GAME_SPEED)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -176,24 +196,13 @@ def launch_game():
         screen.fill((0, 0, 0))
         render_tiles(tile, screen)
         screen.blit(bg_image, (0, 0))
-        render_apples(
-            green_apple,
-            red_apple,
-            screen,
-            ga_1_x,
-            ga_1_y,
-            ga_2_x,
-            ga_2_y,
-            ra_1_x,
-            ra_1_y,
-        )
+        green_apple_1.render(screen)
+        green_apple_2.render(screen)
+        red_apple.render(screen)
         snake.move()
-        render_snake(snake, screen)
+        snake.render(screen)
         pygame.display.flip()
-        ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y = snake.check_apple_collision(
-            ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y
-        )
-        clock.tick(FPS)
+        snake.check_apple_collision(green_apple_1, green_apple_2, red_apple)
 
     pygame.quit()
 
