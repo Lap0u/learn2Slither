@@ -36,50 +36,32 @@ class Snake:
 
     def check_collision(self, new_x, new_y):
         if (
-            new_x < 0
-            or new_x >= WIDTH / TILE_SIZE
-            or new_y < 0
-            or new_y >= HEIGHT / TILE_SIZE
+            new_x < 1
+            or new_x >= WIDTH / TILE_SIZE - 1
+            or new_y < 1
+            or new_y >= HEIGHT / TILE_SIZE - 1
         ):
             print("Game Over! Snake hit the wall.")
             pygame.quit()
             exit()
-
-    def generate_new_apple(self, snake, x_1, y_1, x_2, y_2):
-        ga_1_x = random.randrange(TILE_SIZE, WIDTH - TILE_SIZE * 2, TILE_SIZE)
-        ga_1_y = random.randrange(TILE_SIZE, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
-        while (
-            ga_1_x == x_1
-            and ga_1_y == y_1
-            or ga_1_x == x_2
-            and ga_1_y == y_2
-            or len(
-                [
-                    pos
-                    for pos in zip(snake.x_pos, snake.y_pos)
-                    if pos == (ga_1_x, ga_1_y)
-                ]
-            )
+        if (
+            len([pos for pos in zip(self.x_pos, self.y_pos) if pos == (new_x, new_y)])
             > 0
         ):
-            ga_1_x = random.randrange(TILE_SIZE, WIDTH - TILE_SIZE * 2, TILE_SIZE)
-            ga_1_y = random.randrange(TILE_SIZE, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
-        return ga_1_x, ga_1_y
+            print("Game Over! Snake collided with itself.")
+            pygame.quit()
+            exit()
 
     def check_apple_collision(self, ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y):
         # print(new_x, new_y, ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y)
         if (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (ga_1_x, ga_1_y):
             self.size += 1
             self.grow = True
-            ga_1_x, ga_1_y = self.generate_new_apple(
-                self, ga_2_x, ga_2_y, ra_1_x, ra_1_y
-            )
+            ga_1_x, ga_1_y = generate_new_apple(self, ga_2_x, ga_2_y, ra_1_x, ra_1_y)
         elif (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (ga_2_x, ga_2_y):
             self.size += 1
             self.grow = True
-            ga_2_x, ga_2_y = self.generate_new_apple(
-                self, ga_1_x, ga_1_y, ra_1_x, ra_1_y
-            )
+            ga_2_x, ga_2_y = generate_new_apple(self, ga_1_x, ga_1_y, ra_1_x, ra_1_y)
 
         elif (self.x_pos[0] * TILE_SIZE, self.y_pos[0] * TILE_SIZE) == (ra_1_x, ra_1_y):
             self.size -= 1
@@ -88,9 +70,7 @@ class Snake:
                 print("Game Over! Snake size reduced to zero.")
                 pygame.quit()
                 exit()
-            ra_1_x, ra_1_y = self.generate_new_apple(
-                self, ga_2_x, ga_2_y, ga_1_x, ga_1_y
-            )
+            ra_1_x, ra_1_y = generate_new_apple(self, ga_2_x, ga_2_y, ga_1_x, ga_1_y)
         return ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y
 
     def move(self):
@@ -113,6 +93,24 @@ class Snake:
             self.y_pos.pop()
 
 
+def generate_new_apple(snake, x_1, y_1, x_2, y_2):
+    ga_1_x = random.randrange(TILE_SIZE, WIDTH - TILE_SIZE * 2, TILE_SIZE)
+    ga_1_y = random.randrange(TILE_SIZE, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
+    while (
+        ga_1_x == x_1
+        and ga_1_y == y_1
+        or ga_1_x == x_2
+        and ga_1_y == y_2
+        or len(
+            [pos for pos in zip(snake.x_pos, snake.y_pos) if pos == (ga_1_x, ga_1_y)]
+        )
+        > 0
+    ):
+        ga_1_x = random.randrange(TILE_SIZE, WIDTH - TILE_SIZE * 2, TILE_SIZE)
+        ga_1_y = random.randrange(TILE_SIZE, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
+    return ga_1_x, ga_1_y
+
+
 def render_tiles(tile, screen):
     for i in range(0, WIDTH, TILE_SIZE):
         for j in range(0, HEIGHT, TILE_SIZE):
@@ -120,23 +118,10 @@ def render_tiles(tile, screen):
                 screen.blit(tile, (i, j))
 
 
-def generate_apples():
-    ga_1_x = random.randrange(TILE_SIZE, WIDTH - TILE_SIZE * 2, TILE_SIZE)
-    ga_1_y = random.randrange(TILE_SIZE, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
-    ga_2_x = random.randrange(TILE_SIZE, WIDTH - TILE_SIZE * 2, TILE_SIZE)
-    ga_2_y = random.randrange(TILE_SIZE, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
-    while ga_1_x == ga_2_x and ga_1_y == ga_2_y:
-        ga_2_x = random.randrange(TILE_SIZE, WIDTH - TILE_SIZE * 2, TILE_SIZE)
-        ga_2_y = random.randrange(TILE_SIZE, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
-
-    ra_1_x = random.randrange(TILE_SIZE, WIDTH - TILE_SIZE * 2, TILE_SIZE)
-    ra_1_y = random.randrange(TILE_SIZE, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
-    while (
-        ra_1_x == ga_1_x and ra_1_y == ga_1_y or ra_1_x == ga_2_x and ra_1_y == ga_2_y
-    ):
-        ra_1_x = random.randrange(0, WIDTH - TILE_SIZE * 2, TILE_SIZE)
-        ra_1_y = random.randrange(0, HEIGHT - TILE_SIZE * 2, TILE_SIZE)
-
+def generate_apples(snake):
+    ga_1_x, ga_1_y = generate_new_apple(snake, 500000, 500000, 500000, 500000)
+    ga_2_x, ga_2_y = generate_new_apple(snake, ga_1_x, ga_1_y, 500000, 500000)
+    ra_1_x, ra_1_y = generate_new_apple(snake, ga_1_x, ga_1_y, ga_2_x, ga_2_y)
     return ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y
 
 
@@ -165,13 +150,13 @@ def launch_game():
     pygame.display.set_caption("Snake Game")
     running = True
     clock = pygame.time.Clock()
-    ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y = generate_apples()
+    snake = Snake()
+    ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y = generate_apples(snake)
     bg_image = pygame.image.load("assets/bg-tr.png")
     green_apple = pygame.image.load("assets/apple_green_32.png")
     red_apple = pygame.image.load("assets/apple_red_32.png")
     bg_image.set_alpha(128)
     tile = pygame.image.load("assets/tile.png")
-    snake = Snake()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -202,8 +187,8 @@ def launch_game():
             ra_1_x,
             ra_1_y,
         )
-        render_snake(snake, screen)
         snake.move()
+        render_snake(snake, screen)
         pygame.display.flip()
         ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y = snake.check_apple_collision(
             ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y
