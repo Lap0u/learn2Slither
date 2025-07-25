@@ -26,7 +26,7 @@ def generate_new_apple(snake, x_1, y_1, x_2, y_2):
         ga_1_y = random.randrange(
             globals.TILE_SIZE, globals.HEIGHT - globals.TILE_SIZE * 2, globals.TILE_SIZE
         )
-    return ga_1_x, ga_1_y
+    return ga_1_x // globals.TILE_SIZE, ga_1_y // globals.TILE_SIZE
 
 
 def generate_apples(snake):
@@ -34,10 +34,24 @@ def generate_apples(snake):
     ga_2_x, ga_2_y = generate_new_apple(snake, ga_1_x, ga_1_y, 500000, 500000)
     ra_1_x, ra_1_y = generate_new_apple(snake, ga_1_x, ga_1_y, ga_2_x, ga_2_y)
     green_apple_1 = Apple.Apple(
-        ga_1_x, ga_1_y, True, False, "assets/apple_green_32.png"
+        ga_1_x,
+        ga_1_y,
+        True,
+        False,
+        "assets/apple_green_32.png",
     )
     green_apple_2 = Apple.Apple(
-        ga_2_x, ga_2_y, True, False, "assets/apple_green_32.png"
+        ga_2_x,
+        ga_2_y,
+        True,
+        False,
+        "assets/apple_green_32.png",
     )
-    red_apple = Apple.Apple(ra_1_x, ra_1_y, False, True, "assets/apple_red_32.png")
+    red_apple = Apple.Apple(
+        ra_1_x,
+        ra_1_y,
+        False,
+        True,
+        "assets/apple_red_32.png",
+    )
     return green_apple_1, green_apple_2, red_apple

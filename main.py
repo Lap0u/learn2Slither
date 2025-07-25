@@ -1,7 +1,8 @@
 import argparse
 
 
-from src.game import launch_game
+from src.agentQ import AgentQ
+from src.game import Game
 
 if __name__ == "__main__":
     # parser = argparse.ArgumentParser(description="Snake Game")
@@ -37,4 +38,7 @@ if __name__ == "__main__":
     #     "--session", type=int, default=10, help="Number of sessions to train the agent"
     # )
     # args = parser.parse_args()
-    launch_game()
+    # game = Game()
+    # game.launch_game()
+    agent = AgentQ()
+    agent.train()

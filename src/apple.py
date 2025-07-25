@@ -1,4 +1,5 @@
 import pygame
+import src.globals as globals
 
 
 class Apple:
@@ -10,4 +11,4 @@ class Apple:
         self.path = pygame.image.load(path)
 
     def render(self, screen):
-        screen.blit(self.path, (self.x, self.y))
+        screen.blit(self.path, (self.x * globals.TILE_SIZE, self.y * globals.TILE_SIZE))
