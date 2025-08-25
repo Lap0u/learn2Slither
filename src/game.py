@@ -23,9 +23,16 @@ class Game:
 
     def step(self, action):
         self.snake.direction = action
+        self.snake.check_apple_collision(
+            self.green_apple_1, self.green_apple_2, self.red_apple
+        )
         self.reward = self.snake.move()
         self.update_environment()
+        self.terminal_display()
         return self.environment, self.reward, self.snake.is_dead
+
+    def terminal_display(self):
+        print(self.environment.T)
 
     def update_environment(self):
         for i in range(globals.WIDTH // globals.TILE_SIZE):
@@ -116,6 +123,7 @@ class Game:
             self.green_apple_1.render(screen)
             self.green_apple_2.render(screen)
             self.red_apple.render(screen)
+            self.terminal_display()
             self.snake.move()
             self.update_environment()
             self.snake.render(screen)

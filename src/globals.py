@@ -1,4 +1,4 @@
-GAME_SPEED = 7
+GAME_SPEED = 1
 WIDTH = 340
 HEIGHT = 340
 TILE_SIZE = 34
@@ -13,7 +13,7 @@ DISCOUNT_FACTOR = 0.95  # Value of future rewards
 EPSILON = 1  # Randomness in the agent's actions
 EPSILON_DECAY = 0.9995  # Decay of randomness as the agent learns
 MIN_EPSILON = 0.01  # Minimum randomness
-MAX_EPISODES = 1  # Number of training episodes
-MAX_STEPS = 10  # Maximum steps per episode
+MAX_EPISODES = 10000  # Number of training episodes
+MAX_STEPS = 1000  # Maximum steps per episode
 MEMORY_SIZE = 10000
 BATCH_SIZE = 64  # Size of training batches

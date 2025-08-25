@@ -13,6 +13,7 @@ class Snake:
         self.head = pygame.image.load("assets/snake_head.png")
         self.body = pygame.image.load("assets/snake_body.png")
         self.head_xx = pygame.image.load("assets/snake_head_xx.png")
+        # self.direction = "RIGHT"
         self.direction = random.choice(list(globals.DIRECTIONS.keys()))
         self.x_pos = [
             globals.WIDTH / globals.TILE_SIZE / 2,
@@ -46,14 +47,14 @@ class Snake:
             or new_y < 1
             or new_y >= globals.HEIGHT / globals.TILE_SIZE - 1
         ):
-            print("Game Over! Snake hit the wall.")
+            print("Game Over! Snake hit the wall. size : ", self.size)
             self.is_dead = True
             pygame.quit()
         if (
             len([pos for pos in zip(self.x_pos, self.y_pos) if pos == (new_x, new_y)])
             > 0
         ):
-            print("Game Over! Snake collided with itself.")
+            print("Game Over! Snake collided with itself. size : ", self.size)
             self.is_dead = True
             pygame.quit()
 
@@ -97,6 +98,7 @@ class Snake:
         new_x = self.x_pos[0] + globals.DIRECTIONS[self.direction][0]
         new_y = self.y_pos[0] + globals.DIRECTIONS[self.direction][1]
         self.check_collision(new_x, new_y)
+        self.check_apple_collision
         if self.is_dead:
             return -100
         self.x_pos.insert(0, new_x)

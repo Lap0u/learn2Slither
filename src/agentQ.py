@@ -5,6 +5,7 @@ from torch import nn
 import torch.nn.functional as F
 from collections import deque
 import random
+import torch
 
 
 class DQN(nn.Module):
@@ -36,21 +37,23 @@ class ReplayMemory:
 class AgentQ:
     def __init__(self):
         # Peut-etre enlever 2 et 2 pour les murs
-        self.states = np.zeros(
-            (
-                (
-                    globals.WIDTH
-                    // globals.TILE_SIZE
-                    * globals.HEIGHT
-                    // globals.TILE_SIZE
-                )
-                ** 4,  # Number of possible states (snake head + 3 apples)
-                len(globals.DIRECTIONS),
-            )
-        )
-        self.num_states = (
-            globals.WIDTH // globals.TILE_SIZE * globals.HEIGHT // globals.TILE_SIZE
-        ) ** 4
+        # self.states = np.zeros(
+        #     (
+        #         (
+        #             globals.WIDTH
+        #             // globals.TILE_SIZE
+        #             * globals.HEIGHT
+        #             // globals.TILE_SIZE
+        #         )
+        #         ** 4,  # Number of possible states (snake head + 3 apples)
+        #         len(globals.DIRECTIONS),
+        #     )
+        # )
+        # self.num_states = (
+        #     globals.WIDTH // globals.TILE_SIZE * globals.HEIGHT // globals.TILE_SIZE
+        # ) ** 4
+        self.states = np.zeros((81, len(globals.DIRECTIONS)))
+        self.num_states = 81
         self.num_actions = len(globals.DIRECTIONS)
         self.loss_fn = nn.MSELoss()
 
@@ -115,6 +118,7 @@ class AgentQ:
             h1_nodes=self.num_states,
             out_actions=self.num_actions,
         )
+        sizes = np.zeros(globals.MAX_EPISODES)
         target_dqn.load_state_dict(policy_dqn.state_dict())
         self.optimizer = torch.optim.Adam(
             policy_dqn.parameters(), lr=globals.LEARNING_RATE
@@ -125,6 +129,7 @@ class AgentQ:
         for episode in range(globals.MAX_EPISODES):
             epsilon = globals.EPSILON
             game = Game()
+            print("Starting environment\n", game.environment.T)
             done = False
             truncated = False
             while not done and not truncated:
@@ -134,8 +139,11 @@ class AgentQ:
                     action = list(globals.DIRECTIONS.keys())[
                         np.argmax(policy_dqn(game.environment).detach().numpy())
                     ]
-                new_state, reward, terminated, truncated = game.step(action)
-                memory.append((game.environment, action, new_state, reward, terminated))
+                print("Action taken:", action)
+                new_state, reward, done = game.step(action)
+                if (done) or (step_count >= globals.MAX_STEPS):
+                    sizes[episode] = game.snake.size
+                memory.append((game.environment, action, new_state, reward, done))
                 step_count += 1
                 rewards_per_episode[episode] = reward
                 if len(memory) > globals.BATCH_SIZE and np.sum(rewards_per_episode) > 0:
@@ -147,4 +155,5 @@ class AgentQ:
                     if step_count % 1000 == 0:
                         target_dqn.load_state_dict(policy_dqn.state_dict())
                         step_count = 0
-        torch.save(policy_dqn.state_dict(), "dqn_model.pth")
+        # torch.save(policy_dqn.state_dict(), "dqn_model.pth")
+        print("Average snake size over episodes:", sizes.mean(), "Max:", sizes.max())
