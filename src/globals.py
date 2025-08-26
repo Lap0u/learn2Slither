@@ -16,4 +16,4 @@ MIN_EPSILON = 0.01  # Minimum randomness
 MAX_EPISODES = 10000  # Number of training episodes
 MAX_STEPS = 1000  # Maximum steps per episode
 MEMORY_SIZE = 10000
-BATCH_SIZE = 64  # Size of training batches
+BATCH_SIZE = 32  # Size of training batches

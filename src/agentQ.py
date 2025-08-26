@@ -64,6 +64,11 @@ class AgentQ:
         else:
             return list(globals.DIRECTIONS.keys())[np.argmax(self.q_table[state, :])]
 
+    def state_to_dqn_input(self, state: int, num_states: int) -> torch.Tensor:
+        input_tensor = torch.zeros(num_states)
+        input_tensor[state] = 1
+        return input_tensor
+
     def optimize(self, mini_batch, policy_dqn, target_dqn):
         # Get number of input nodes
         num_states = policy_dqn.fc1.in_features
@@ -82,7 +87,7 @@ class AgentQ:
                 with torch.no_grad():
                     target = torch.FloatTensor(
                         reward
-                        + self.discount_factor_g
+                        + globals.DISCOUNT_FACTOR
                         * target_dqn(
                             self.state_to_dqn_input(new_state, num_states)
                         ).max()
@@ -146,7 +151,8 @@ class AgentQ:
                 memory.append((game.environment, action, new_state, reward, done))
                 step_count += 1
                 rewards_per_episode[episode] = reward
-                if len(memory) > globals.BATCH_SIZE and np.sum(rewards_per_episode) > 0:
+                if len(memory) > globals.BATCH_SIZE:
+                    print("Improving")
                     mini_batch = memory.sample(globals.BATCH_SIZE)
                     self.optimize(mini_batch, policy_dqn, target_dqn)
 
