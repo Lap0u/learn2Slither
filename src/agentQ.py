@@ -36,24 +36,8 @@ class ReplayMemory:
 
 class AgentQ:
     def __init__(self):
-        # Peut-etre enlever 2 et 2 pour les murs
-        # self.states = np.zeros(
-        #     (
-        #         (
-        #             globals.WIDTH
-        #             // globals.TILE_SIZE
-        #             * globals.HEIGHT
-        #             // globals.TILE_SIZE
-        #         )
-        #         ** 4,  # Number of possible states (snake head + 3 apples)
-        #         len(globals.DIRECTIONS),
-        #     )
-        # )
-        # self.num_states = (
-        #     globals.WIDTH // globals.TILE_SIZE * globals.HEIGHT // globals.TILE_SIZE
-        # ) ** 4
-        self.states = np.zeros((81, len(globals.DIRECTIONS)))
-        self.num_states = 81
+        self.states = np.zeros((1200, len(globals.DIRECTIONS)))
+        self.num_states = 1200
         self.num_actions = len(globals.DIRECTIONS)
         self.loss_fn = nn.MSELoss()
 
@@ -65,48 +49,43 @@ class AgentQ:
             return list(globals.DIRECTIONS.keys())[np.argmax(self.q_table[state, :])]
 
     def state_to_dqn_input(self, state: int, num_states: int) -> torch.Tensor:
-        input_tensor = torch.zeros(num_states)
-        input_tensor[state] = 1
+        print("num", num_states, state)
+        input_tensor = torch.zeros(num_states, dtype=torch.float32)
+        conc_state = np.concatenate((state[0], state[1]))
+
+        print("input", input_tensor, state)
+        input_tensor[conc_state] = 1
         return input_tensor
 
     def optimize(self, mini_batch, policy_dqn, target_dqn):
-        # Get number of input nodes
-        num_states = policy_dqn.fc1.in_features
+        states, actions, next_states, rewards, dones = zip(*mini_batch)
 
-        current_q_list = []
-        target_q_list = []
+        # Convert states to one-hot encoded input tensors
+        state_tensors = torch.stack(
+            [self.state_to_dqn_input(s, self.num_states) for s in states]
+        )
+        next_state_tensors = torch.stack(
+            [self.state_to_dqn_input(ns, self.num_states) for ns in next_states]
+        )
+        print("action", actions)
+        action_tensors = torch.tensor(actions, dtype=torch.long)
+        reward_tensors = torch.tensor(rewards, dtype=torch.float32)
+        done_tensors = torch.tensor(dones, dtype=torch.float32)
 
-        for state, action, new_state, reward, terminated in mini_batch:
+        # Current Q-values
+        q_values = policy_dqn(state_tensors)
+        q_values = q_values.gather(1, action_tensors.unsqueeze(1)).squeeze(1)
 
-            if terminated:
-                # Agent either reached goal (reward=1) or fell into hole (reward=0)
-                # When in a terminated state, target q value should be set to the reward.
-                target = torch.FloatTensor([reward])
-            else:
-                # Calculate target q value
-                with torch.no_grad():
-                    target = torch.FloatTensor(
-                        reward
-                        + globals.DISCOUNT_FACTOR
-                        * target_dqn(
-                            self.state_to_dqn_input(new_state, num_states)
-                        ).max()
-                    )
+        # Next Q-values (from target network, detached)
+        next_q_values = target_dqn(next_state_tensors).max(1)[0].detach()
+        target_q_values = reward_tensors + globals.GAMMA * next_q_values * (
+            1 - done_tensors
+        )
 
-            # Get the current set of Q values
-            current_q = policy_dqn(self.state_to_dqn_input(state, num_states))
-            current_q_list.append(current_q)
+        # Compute loss
+        loss = self.loss_fn(q_values, target_q_values)
 
-            # Get the target set of Q values
-            target_q = target_dqn(self.state_to_dqn_input(state, num_states))
-            # Adjust the specific action to the target that was just calculated
-            target_q[action] = target
-            target_q_list.append(target_q)
-
-        # Compute loss for the whole minibatch
-        loss = self.loss_fn(torch.stack(current_q_list), torch.stack(target_q_list))
-
-        # Optimize the model
+        # Optimize the policy network
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
@@ -136,19 +115,18 @@ class AgentQ:
             game = Game()
             print("Starting environment\n", game.environment.T)
             done = False
-            truncated = False
-            while not done and not truncated:
+            while not done:
                 if random.random() < globals.EPSILON:
                     action = np.random.choice(list(globals.DIRECTIONS.keys()))
                 else:
                     action = list(globals.DIRECTIONS.keys())[
-                        np.argmax(policy_dqn(game.environment).detach().numpy())
+                        np.argmax(policy_dqn(game.snake_view).detach().numpy())
                     ]
                 print("Action taken:", action)
                 new_state, reward, done = game.step(action)
                 if (done) or (step_count >= globals.MAX_STEPS):
                     sizes[episode] = game.snake.size
-                memory.append((game.environment, action, new_state, reward, done))
+                memory.append((game.snake_view, action, new_state, reward, done))
                 step_count += 1
                 rewards_per_episode[episode] = reward
                 if len(memory) > globals.BATCH_SIZE:

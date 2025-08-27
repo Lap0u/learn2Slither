@@ -20,6 +20,19 @@ class Game:
             self.snake
         )
         self.update_environment()
+        self.snake_view = self.update_snake_view()
+
+    def update_snake_view(self):
+        x, y = self.snake.x_pos[0], self.snake.y_pos[0]
+        x_view = np.zeros(globals.WIDTH // globals.TILE_SIZE, dtype=int)
+        y_view = np.zeros(globals.HEIGHT // globals.TILE_SIZE, dtype=int)
+        for i in range(globals.WIDTH // globals.TILE_SIZE):
+            for j in range(globals.HEIGHT // globals.TILE_SIZE):
+                if x == i:
+                    x_view[j] = self.environment[i][j]
+                if y == j:
+                    y_view[i] = self.environment[i][j]
+        return x_view, y_view
 
     def step(self, action):
         self.snake.direction = action
@@ -28,8 +41,9 @@ class Game:
         )
         self.reward = self.snake.move()
         self.update_environment()
+        self.snake_view = self.update_snake_view()
         self.terminal_display()
-        return self.environment, self.reward, self.snake.is_dead
+        return self.snake_view, self.reward, self.snake.is_dead
 
     def terminal_display(self):
         print(self.environment.T)
