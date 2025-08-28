@@ -4,12 +4,8 @@ import src.globals as globals
 
 
 def generate_new_apple(snake, x_1, y_1, x_2, y_2):
-    ga_1_x = random.randrange(
-        globals.TILE_SIZE, globals.WIDTH - globals.TILE_SIZE * 2, globals.TILE_SIZE
-    )
-    ga_1_y = random.randrange(
-        globals.TILE_SIZE, globals.HEIGHT - globals.TILE_SIZE * 2, globals.TILE_SIZE
-    )
+    ga_1_x = random.randrange(0, globals.WIDTH - 2)
+    ga_1_y = random.randrange(0, globals.HEIGHT - 2)
     while (
         ga_1_x == x_1
         and ga_1_y == y_1
@@ -20,13 +16,9 @@ def generate_new_apple(snake, x_1, y_1, x_2, y_2):
         )
         > 0
     ):
-        ga_1_x = random.randrange(
-            globals.TILE_SIZE, globals.WIDTH - globals.TILE_SIZE * 2, globals.TILE_SIZE
-        )
-        ga_1_y = random.randrange(
-            globals.TILE_SIZE, globals.HEIGHT - globals.TILE_SIZE * 2, globals.TILE_SIZE
-        )
-    return ga_1_x // globals.TILE_SIZE, ga_1_y // globals.TILE_SIZE
+        ga_1_x = random.randrange(0, globals.WIDTH - 2)
+        ga_1_y = random.randrange(0, globals.HEIGHT - 2)
+    return ga_1_x, ga_1_y
 
 
 def generate_apples(snake):

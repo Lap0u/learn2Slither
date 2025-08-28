@@ -15,19 +15,16 @@ class Snake:
         self.head_xx = pygame.image.load("assets/snake_head_xx.png")
         # self.direction = "RIGHT"
         self.direction = random.choice(list(globals.DIRECTIONS.keys()))
+        # print("Initial direction:", self.direction)
         self.x_pos = [
-            globals.WIDTH / globals.TILE_SIZE / 2,
-            globals.WIDTH / globals.TILE_SIZE / 2
-            - globals.DIRECTIONS[self.direction][0],
-            globals.WIDTH / globals.TILE_SIZE / 2
-            - globals.DIRECTIONS[self.direction][0] * 2,
+            globals.WIDTH / 2,
+            globals.WIDTH / 2 - globals.DIRECTIONS[self.direction][0][0],
+            globals.WIDTH / 2 - globals.DIRECTIONS[self.direction][0][0] * 2,
         ]
         self.y_pos = [
-            globals.HEIGHT / globals.TILE_SIZE / 2,
-            globals.HEIGHT / globals.TILE_SIZE / 2
-            - globals.DIRECTIONS[self.direction][1],
-            globals.HEIGHT / globals.TILE_SIZE / 2
-            - globals.DIRECTIONS[self.direction][1] * 2,
+            globals.HEIGHT / 2,
+            globals.HEIGHT / 2 - globals.DIRECTIONS[self.direction][0][1],
+            globals.HEIGHT / 2 - globals.DIRECTIONS[self.direction][0][1] * 2,
         ]
 
     def render(self, screen):
@@ -43,9 +40,9 @@ class Snake:
     def check_collision(self, new_x, new_y):
         if (
             new_x < 1
-            or new_x >= globals.WIDTH / globals.TILE_SIZE - 1
+            or new_x >= globals.WIDTH - 1
             or new_y < 1
-            or new_y >= globals.HEIGHT / globals.TILE_SIZE - 1
+            or new_y >= globals.HEIGHT - 1
         ):
             print("Game Over! Snake hit the wall. size : ", self.size)
             self.is_dead = True
@@ -95,8 +92,8 @@ class Snake:
         return green_apple_1, green_apple_2, red_apple
 
     def move(self):
-        new_x = self.x_pos[0] + globals.DIRECTIONS[self.direction][0]
-        new_y = self.y_pos[0] + globals.DIRECTIONS[self.direction][1]
+        new_x = self.x_pos[0] + globals.DIRECTIONS[self.direction][0][0]
+        new_y = self.y_pos[0] + globals.DIRECTIONS[self.direction][0][1]
         self.check_collision(new_x, new_y)
         self.check_apple_collision
         if self.is_dead:

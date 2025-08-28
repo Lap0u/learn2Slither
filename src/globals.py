@@ -1,12 +1,12 @@
 GAME_SPEED = 1
-WIDTH = 340
-HEIGHT = 340
+WIDTH = 12
+HEIGHT = 12
 TILE_SIZE = 34
 DIRECTIONS = {
-    "UP": [0, -1],
-    "DOWN": [0, 1],
-    "LEFT": [-1, 0],
-    "RIGHT": [1, 0],
+    "UP": [[0, -1], 0],
+    "DOWN": [[0, 1], 1],
+    "LEFT": [[-1, 0], 2],
+    "RIGHT": [[1, 0], 3],
 }
 LEARNING_RATE = 0.1  # Impact on the weights
 DISCOUNT_FACTOR = 0.95  # Value of future rewards

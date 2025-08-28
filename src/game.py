@@ -10,9 +10,7 @@ import numpy as np
 class Game:
 
     def __init__(self):
-        self.environment = np.zeros(
-            (globals.WIDTH // globals.TILE_SIZE, globals.HEIGHT // globals.TILE_SIZE)
-        )
+        self.environment = np.zeros((globals.WIDTH, globals.HEIGHT))
         self.is_done = False
         self.reward = 0
         self.snake = Snake()
@@ -24,10 +22,10 @@ class Game:
 
     def update_snake_view(self):
         x, y = self.snake.x_pos[0], self.snake.y_pos[0]
-        x_view = np.zeros(globals.WIDTH // globals.TILE_SIZE, dtype=int)
-        y_view = np.zeros(globals.HEIGHT // globals.TILE_SIZE, dtype=int)
-        for i in range(globals.WIDTH // globals.TILE_SIZE):
-            for j in range(globals.HEIGHT // globals.TILE_SIZE):
+        x_view = np.zeros(globals.WIDTH, dtype=int)
+        y_view = np.zeros(globals.HEIGHT, dtype=int)
+        for i in range(globals.WIDTH):
+            for j in range(globals.HEIGHT):
                 if x == i:
                     x_view[j] = self.environment[i][j]
                 if y == j:
@@ -46,16 +44,20 @@ class Game:
         return self.snake_view, self.reward, self.snake.is_dead
 
     def terminal_display(self):
-        print(self.environment.T)
+        # print(self.environment.T)
+        pass
 
     def update_environment(self):
-        for i in range(globals.WIDTH // globals.TILE_SIZE):
-            for j in range(globals.HEIGHT // globals.TILE_SIZE):
+        # print("Apple 1", self.green_apple_1.x, self.green_apple_1.y)
+        # print("Apple 2", self.green_apple_2.x, self.green_apple_2.y)
+        # print("Red Apple", self.red_apple.x, self.red_apple.y)
+        for i in range(globals.WIDTH):
+            for j in range(globals.HEIGHT):
                 if (
                     i == 0
-                    or i == globals.WIDTH // globals.TILE_SIZE - 1
+                    or i == globals.WIDTH - 1
                     or j == 0
-                    or j == globals.HEIGHT // globals.TILE_SIZE - 1
+                    or j == globals.HEIGHT - 1
                 ):
                     self.environment[i][j] = 1
                 elif (i, j) == (self.green_apple_1.x, self.green_apple_1.y) or (
@@ -71,15 +73,16 @@ class Game:
                     self.environment[i][j] = 5
                 else:
                     self.environment[i][j] = 0
+        # print("env", self.environment.T)
 
     def render_tiles(self, tile, screen):
-        for i in range(0, globals.WIDTH, globals.TILE_SIZE):
-            for j in range(0, globals.HEIGHT, globals.TILE_SIZE):
+        for i in range(0, globals.WIDTH):
+            for j in range(0, globals.HEIGHT):
                 if (
                     i == 0
-                    or i == globals.WIDTH - globals.TILE_SIZE
+                    or i == globals.WIDTH - 1
                     or j == 0
-                    or j == globals.HEIGHT - globals.TILE_SIZE
+                    or j == globals.HEIGHT - 1
                 ):
                     screen.blit(tile, (i, j))
 
