@@ -6,6 +6,7 @@ import torch.nn.functional as F
 from collections import deque
 import random
 import torch
+import pygame
 
 
 class DQN(nn.Module):
@@ -82,7 +83,7 @@ class AgentQ:
 
         return torch.tensor(full_state, dtype=torch.float32)
 
-    def choose_action(self, snake_view, policy_dqn, epsilon, current_direction="RIGHT"):
+    def choose_action(self, snake_view, policy_dqn, epsilon, current_direction):
         """Choose action using epsilon-greedy policy with cross-view only"""
         if random.random() < epsilon:
             return random.choice(list(globals.DIRECTIONS.keys()))
@@ -205,6 +206,8 @@ class AgentQ:
         return loss.item()
 
     def train(self):
+        average_size_by_chunk_of_100 = []
+        average_size_by_chunk_of_1000 = []
         memory = ReplayMemory(globals.MEMORY_SIZE)
         policy_dqn = DQN(
             in_states=self.state_size,
@@ -297,17 +300,27 @@ class AgentQ:
                     losses.append(loss)
 
                     # Decay epsilon more gradually for cross-view learning
-                    current_epsilon = max(current_epsilon * 0.9998, 0.02)
+                    current_epsilon = max(
+                        current_epsilon * globals.EPSILON_DECAY, globals.MIN_EPSILON
+                    )
 
                     # Update target network
-                    if step_count % 1500 == 0:  # Less frequent updates
+                    if step_count % 1000 == 0:  # Less frequent updates
                         target_dqn.load_state_dict(policy_dqn.state_dict())
 
             # Record episode statistics
             sizes[episode] = game.snake.size
             rewards_per_episode[episode] = episode_reward
             epsilon_history.append(current_epsilon)
-
+            if (episode + 1) % 1000 == 0 and episode > 0:
+                print("Array chunk", sizes[max(0, episode - 1000) : episode + 1])
+                average_size_by_chunk_of_1000.append(
+                    np.mean(sizes[max(0, episode - 1000) : episode + 1])
+                )
+            if (episode + 1) % 100 == 0 and episode > 0:
+                average_size_by_chunk_of_100.append(
+                    np.mean(sizes[max(0, episode - 100) : episode + 1])
+                )
             # Print progress
             if episode % 100 == 0:
                 avg_reward = np.mean(
@@ -326,7 +339,9 @@ class AgentQ:
         print("Training completed!")
         print(f"Average snake size: {sizes.mean():.2f}, Max: {sizes.max()}")
         print(f"Final epsilon: {current_epsilon:.4f}")
-
+        print(f"Average size per 100 episodes: {average_size_by_chunk_of_100}")
+        print(f"Average size per 1000 episodes: {average_size_by_chunk_of_1000}")
+        print("Average array", sizes)
         return {
             "sizes": sizes,
             "rewards": rewards_per_episode,
@@ -334,3 +349,50 @@ class AgentQ:
             "losses": losses,
             "policy_dqn": policy_dqn,
         }
+
+    def play(self):
+        pygame.init()
+        pygame.font.init()  # you have to call this at the start,
+        my_font = pygame.font.SysFont("Comic Sans MS", 30)
+
+        screen = pygame.display.set_mode(
+            (globals.WIDTH * globals.TILE_SIZE, globals.HEIGHT * globals.TILE_SIZE)
+        )
+        pygame.display.set_caption("Snake Game")
+        clock = pygame.time.Clock()
+        bg_image = pygame.image.load("assets/bg-tr.png")
+        bg_image.set_alpha(128)
+        tile = pygame.image.load("assets/tile.png")
+        model = DQN(globals.WIDTH + globals.HEIGHT + 4, 256, len(globals.DIRECTIONS))
+        model_path = "dqn_snake_model.pth"
+        model.load_state_dict(torch.load(model_path, weights_only=True))
+        game = Game()
+
+        done = False
+        num_steps = 0
+        while not done:
+            clock.tick(globals.ROBOT_SPEED)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    done = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        done = False
+            current_direction = game.snake.direction
+            action = self.choose_action(
+                game.snake_view,
+                model,
+                0,
+                current_direction=current_direction,
+            )
+            _, _, done = game.step(
+                action,
+                display=True,
+                step=num_steps,
+                screen=screen,
+                bg_image=bg_image,
+                tile=tile,
+                my_font=my_font,
+            )
+            num_steps += 1
+        pygame.quit()

@@ -20,6 +20,24 @@ class Game:
         self.update_environment()
         self.snake_view = self.update_snake_view()
 
+    def agent_render(self, screen, bg_image, tile, my_font, steps):
+        screen.fill((0, 0, 0))
+        self.render_tiles(tile, screen)
+        screen.blit(bg_image, (0, 0))
+        self.green_apple_1.render(screen)
+        self.green_apple_2.render(screen)
+        self.red_apple.render(screen)
+        self.snake.render(screen)
+        # if you want to use this module.
+        text_surface = my_font.render(
+            f"Size: {self.snake.size} steps {steps}",
+            False,
+            (62, 69, 129),
+            (166, 166, 166),
+        )
+        screen.blit(text_surface, (globals.TILE_SIZE // 4, globals.TILE_SIZE // 4))
+        pygame.display.flip()
+
     def update_snake_view(self):
         x, y = self.snake.x_pos[0], self.snake.y_pos[0]
         x_view = np.zeros(globals.WIDTH, dtype=int)
@@ -32,7 +50,16 @@ class Game:
                     y_view[i] = self.environment[i][j]
         return x_view, y_view
 
-    def step(self, action):
+    def step(
+        self,
+        action,
+        display=False,
+        step=0,
+        screen=None,
+        bg_image=None,
+        tile=None,
+        my_font=None,
+    ):
         self.snake.direction = action
         self.snake.check_apple_collision(
             self.green_apple_1, self.green_apple_2, self.red_apple
@@ -40,7 +67,10 @@ class Game:
         self.reward = self.snake.move()
         self.update_environment()
         self.snake_view = self.update_snake_view()
-        self.terminal_display()
+        if display is True and screen is not None and self.snake.is_dead is False:
+            self.agent_render(screen, bg_image, tile, my_font, step)
+        else:
+            self.terminal_display()
         return self.snake_view, self.reward, self.snake.is_dead
 
     def terminal_display(self):
@@ -76,13 +106,13 @@ class Game:
         # print("env", self.environment.T)
 
     def render_tiles(self, tile, screen):
-        for i in range(0, globals.WIDTH):
-            for j in range(0, globals.HEIGHT):
+        for i in range(0, globals.WIDTH * globals.TILE_SIZE, globals.TILE_SIZE):
+            for j in range(0, globals.HEIGHT * globals.TILE_SIZE, globals.TILE_SIZE):
                 if (
                     i == 0
-                    or i == globals.WIDTH - 1
+                    or i == globals.WIDTH * globals.TILE_SIZE - globals.TILE_SIZE
                     or j == 0
-                    or j == globals.HEIGHT - 1
+                    or j == globals.HEIGHT * globals.TILE_SIZE - globals.TILE_SIZE
                 ):
                     screen.blit(tile, (i, j))
 
