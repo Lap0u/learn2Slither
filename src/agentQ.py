@@ -12,18 +12,16 @@ import pygame
 class DQN(nn.Module):
     def __init__(self, in_states, h1_nodes, out_actions):
         super().__init__()
-        self.fc1 = nn.Linear(in_states, h1_nodes)
-        self.fc2 = nn.Linear(h1_nodes, h1_nodes // 2)
-        self.fc3 = nn.Linear(h1_nodes // 2, h1_nodes // 4)
+        self.fc1 = nn.Linear(in_states, h1_nodes // 2)  # Reduce from 256 to 128
+        self.fc2 = nn.Linear(h1_nodes // 2, h1_nodes // 4)  # 64
         self.out = nn.Linear(h1_nodes // 4, out_actions)
-        self.dropout = nn.Dropout(0.1)
+        self.dropout = nn.Dropout(0.3)  # Increase dropout
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = self.dropout(x)
         x = F.relu(self.fc2(x))
-        x = self.dropout(x)
-        x = F.relu(self.fc3(x))
+        x = self.dropout(x)  # Add dropout here too
         x = self.out(x)
         return x
 
@@ -85,35 +83,67 @@ class AgentQ:
 
     def choose_action(self, snake_view, policy_dqn, epsilon, current_direction):
         """Choose action using epsilon-greedy policy with cross-view only"""
+
+        # Allowed directions (exclude direct opposite)
+        directions = list(globals.DIRECTIONS.keys())
+        if current_direction == "LEFT":
+            directions.remove("RIGHT")
+        elif current_direction == "RIGHT":
+            directions.remove("LEFT")
+        elif current_direction == "UP":
+            directions.remove("DOWN")
+        elif current_direction == "DOWN":
+            directions.remove("UP")
+
         if random.random() < epsilon:
-            return random.choice(list(globals.DIRECTIONS.keys()))
+            # Exploration
+            return random.choice(directions)
         else:
+            # Exploitation
             with torch.no_grad():
                 state_tensor = self.state_to_dqn_input(snake_view, current_direction)
-                q_values = policy_dqn(state_tensor.unsqueeze(0))
-                action_idx = q_values.argmax().item()
+                q_values = policy_dqn(state_tensor.unsqueeze(0)).squeeze()
+
+                # Mask out invalid directions
+                valid_indices = [
+                    list(globals.DIRECTIONS.keys()).index(d) for d in directions
+                ]
+                masked_q_values = torch.full_like(q_values, float("-inf"))
+                masked_q_values[valid_indices] = q_values[valid_indices]
+                action_idx = masked_q_values.argmax().item()
+                # print("action_idx", action_idx)
+                # print("current_direction", current_direction)
+                # print("q_values", q_values)
+                # print("snake_view", snake_view)
+
                 return list(globals.DIRECTIONS.keys())[action_idx]
 
     def calculate_distance_reward(self, x_view, y_view, head_x, head_y):
         """
-        Calculate a simple distance-based reward using only cross-view information.
-        Look for apples (value 2) in the cross-view.
+        Distance-based reward shaping.
+        - Green apple (2) = positive reward (bonus).
+        - Red apple (3) = negative reward (malus).
+        - Snake body (4) = negative reward (malus).
         """
         reward = 0
 
-        # Check x_view for apples and calculate distance
-        for i, cell_value in enumerate(x_view):
-            if cell_value == 2:  # Green apple
-                distance = abs(i - head_y)  # Distance in y direction
-                reward += max(0, 2 - distance * 0.1)  # Closer = better reward
+        def process_view(view, head_pos, axis="y"):
+            nonlocal reward
+            for i, cell_value in enumerate(view):
+                distance = abs(i - head_pos)
 
-        # Check y_view for apples and calculate distance
-        for i, cell_value in enumerate(y_view):
-            if cell_value == 2:  # Green apple
-                distance = abs(i - head_x)  # Distance in x direction
-                reward += max(0, 2 - distance * 0.1)  # Closer = better reward
+                if cell_value == 2:  # Green apple
+                    reward += max(0, 2 - distance * 0.1)  # closer = better
+                elif cell_value == 3:  # Red apple
+                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                elif cell_value == 4:  # Snake body
+                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
 
-        return reward * 0.1  # Scale down the reward
+        # Process both cross views
+        process_view(x_view, head_y, axis="y")
+        process_view(y_view, head_x, axis="x")
+
+        return reward * 0.1  # Scale down shaped reward
 
     def get_position_from_view(self, snake_view):
         """Extract snake head position from cross-view (where both views show snake head)"""
@@ -142,7 +172,7 @@ class AgentQ:
         shaped_reward = base_reward
 
         # Only add distance-based rewards for non-terminal states
-        if base_reward > -50:  # Not a death
+        if base_reward == 1:  # Not a death
             old_head_x, old_head_y = self.get_position_from_view(old_view)
             new_head_x, new_head_y = self.get_position_from_view(new_view)
 
@@ -230,6 +260,8 @@ class AgentQ:
         epsilon_history = []
         losses = []
         step_count = 0
+        loss = 0
+        best_avg_size = 0
 
         current_epsilon = 0.9  # Start with high exploration
 
@@ -266,15 +298,15 @@ class AgentQ:
                     old_snake_view, new_snake_view, base_reward
                 )
 
-                # Improved reward structure
-                if base_reward == -100:  # Death
-                    reward = -100
-                elif base_reward == 10:  # Ate apple
-                    reward = 50  # Higher reward for eating
-                elif base_reward == -10:  # Ate red apple
-                    reward = -20
-                else:  # Normal step
-                    reward = -0.1  # Small penalty for time to encourage efficiency
+                # # Improved reward structure
+                # if base_reward == -100:  # Death
+                #     reward = -100
+                # elif base_reward == 10:  # Ate apple
+                #     reward = 50  # Higher reward for eating
+                # elif base_reward == -10:  # Ate red apple
+                #     reward = -20
+                # else:  # Normal step
+                #     reward = -0.1  # Small penalty for time to encourage efficiency
 
                 # Store transition in memory
                 memory.append(
@@ -312,6 +344,7 @@ class AgentQ:
             sizes[episode] = game.snake.size
             rewards_per_episode[episode] = episode_reward
             epsilon_history.append(current_epsilon)
+            # print("Loss : ", loss)
             if (episode + 1) % 1000 == 0 and episode > 0:
                 print("Array chunk", sizes[max(0, episode - 1000) : episode + 1])
                 average_size_by_chunk_of_1000.append(
@@ -327,6 +360,14 @@ class AgentQ:
                     rewards_per_episode[max(0, episode - 100) : episode + 1]
                 )
                 avg_size = np.mean(sizes[max(0, episode - 100) : episode + 1])
+                if avg_size > best_avg_size:
+                    best_avg_size = avg_size
+                    wasted_rounds = 0
+                else:
+                    wasted_rounds += 100
+                if wasted_rounds >= globals.PATIENCE:
+                    print("Early stopping triggered")
+                    break
                 avg_loss = np.mean(losses[-100:]) if losses else 0
                 print(
                     f"Episode {episode}, Avg Reward: {avg_reward:.2f}, "
