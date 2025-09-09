@@ -12,16 +12,16 @@ import pygame
 class DQN(nn.Module):
     def __init__(self, in_states, h1_nodes, out_actions):
         super().__init__()
-        self.fc1 = nn.Linear(in_states, h1_nodes // 2)  # Reduce from 256 to 128
-        self.fc2 = nn.Linear(h1_nodes // 2, h1_nodes // 4)  # 64
+        self.fc1 = nn.Linear(in_states, h1_nodes // 2)
+        self.fc2 = nn.Linear(h1_nodes // 2, h1_nodes // 4)
         self.out = nn.Linear(h1_nodes // 4, out_actions)
-        self.dropout = nn.Dropout(0.3)  # Increase dropout
+        self.dropout = nn.Dropout(0.3)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = self.dropout(x)
         x = F.relu(self.fc2(x))
-        x = self.dropout(x)  # Add dropout here too
+        x = self.dropout(x)
         x = self.out(x)
         return x
 
@@ -115,7 +115,7 @@ class AgentQ:
                 # print("current_direction", current_direction)
                 # print("q_values", q_values)
                 # print("snake_view", snake_view)
-
+                # print("#" * 20)
                 return list(globals.DIRECTIONS.keys())[action_idx]
 
     def calculate_distance_reward(self, x_view, y_view, head_x, head_y):
@@ -134,10 +134,12 @@ class AgentQ:
 
                 if cell_value == 2:  # Green apple
                     reward += max(0, 2 - distance * 0.1)  # closer = better
-                elif cell_value == 3:  # Red apple
-                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
-                elif cell_value == 4:  # Snake body
-                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                # elif cell_value == 3:  # Red apple
+                #     reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                # elif cell_value == 5:  # Snake body
+                #     reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                # elif cell_value == 1:  # Wall
+                #     reward -= max(0, 2 - distance * 0.1)  # closer = worse
 
         # Process both cross views
         process_view(x_view, head_y, axis="y")
@@ -172,7 +174,7 @@ class AgentQ:
         shaped_reward = base_reward
 
         # Only add distance-based rewards for non-terminal states
-        if base_reward == 1:  # Not a death
+        if base_reward == -1:  # Not a death
             old_head_x, old_head_y = self.get_position_from_view(old_view)
             new_head_x, new_head_y = self.get_position_from_view(new_view)
 
@@ -188,7 +190,7 @@ class AgentQ:
                 )
 
                 # Small reward for getting closer to apples
-                shaped_reward += new_dist_reward - old_dist_reward
+                shaped_reward += new_dist_reward
 
         return shaped_reward
 
@@ -272,9 +274,6 @@ class AgentQ:
             episode_steps = 0
             done = False
 
-            # Store previous state for reward shaping
-            prev_snake_view = game.snake_view
-
             while not done and episode_steps < globals.MAX_STEPS:
                 current_direction = game.snake.direction
 
@@ -294,21 +293,11 @@ class AgentQ:
                 new_snake_view, base_reward, done = game.step(action)
 
                 # Apply reward shaping using only cross-view information
-                reward = self.get_shaped_reward(
-                    old_snake_view, new_snake_view, base_reward
-                )
+                # reward = self.get_shaped_reward(
+                #     old_snake_view, new_snake_view, base_reward
+                # )
+                reward = base_reward
 
-                # # Improved reward structure
-                # if base_reward == -100:  # Death
-                #     reward = -100
-                # elif base_reward == 10:  # Ate apple
-                #     reward = 50  # Higher reward for eating
-                # elif base_reward == -10:  # Ate red apple
-                #     reward = -20
-                # else:  # Normal step
-                #     reward = -0.1  # Small penalty for time to encourage efficiency
-
-                # Store transition in memory
                 memory.append(
                     (
                         old_snake_view,

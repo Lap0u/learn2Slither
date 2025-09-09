@@ -114,5 +114,5 @@ class Snake:
         else:
             self.x_pos.pop()
             self.y_pos.pop()
-            return 1
-        return 1
+            return -0.1
+        return -0.1

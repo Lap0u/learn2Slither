@@ -18,4 +18,4 @@ MAX_EPISODES = 3000  # Number of training episodes
 MAX_STEPS = 1000  # Maximum steps per episode
 MEMORY_SIZE = 30000
 BATCH_SIZE = 32  # Size of training batches
-PATIENCE = 200000
+PATIENCE = 50000
