@@ -12,7 +12,7 @@ def generate_new_apple(snake, x_1, y_1, x_2, y_2):
         or ga_1_x == x_2
         and ga_1_y == y_2
         or len(
-            [pos for pos in zip(snake.x_pos, snake.y_pos) if pos == (ga_1_x, ga_1_y)]
+            [p for p in zip(snake.x_pos, snake.y_pos) if p == (ga_1_x, ga_1_y)]
         )
         > 0
     ):
@@ -21,7 +21,7 @@ def generate_new_apple(snake, x_1, y_1, x_2, y_2):
     return ga_1_x, ga_1_y
 
 
-def generate_apples(snake):
+def gen_apple(snake):
     ga_1_x, ga_1_y = generate_new_apple(snake, 500000, 500000, 500000, 500000)
     ga_2_x, ga_2_y = generate_new_apple(snake, ga_1_x, ga_1_y, 500000, 500000)
     ra_1_x, ra_1_y = generate_new_apple(snake, ga_1_x, ga_1_y, ga_2_x, ga_2_y)

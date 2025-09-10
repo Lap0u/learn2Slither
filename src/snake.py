@@ -13,28 +13,26 @@ class Snake:
         self.head = pygame.image.load("assets/snake_head.png")
         self.body = pygame.image.load("assets/snake_body.png")
         self.head_xx = pygame.image.load("assets/snake_head_xx.png")
-        # self.direction = "RIGHT"
-        self.direction = random.choice(list(globals.DIRECTIONS.keys()))
-        # print("Initial direction:", self.direction)
+        self.direction = random.choice(list(globals.DIR.keys()))
         self.x_pos = [
             globals.WIDTH / 2,
-            globals.WIDTH / 2 - globals.DIRECTIONS[self.direction][0][0],
-            globals.WIDTH / 2 - globals.DIRECTIONS[self.direction][0][0] * 2,
+            globals.WIDTH / 2 - globals.DIR[self.direction][0][0],
+            globals.WIDTH / 2 - globals.DIR[self.direction][0][0] * 2,
         ]
         self.y_pos = [
             globals.HEIGHT / 2,
-            globals.HEIGHT / 2 - globals.DIRECTIONS[self.direction][0][1],
-            globals.HEIGHT / 2 - globals.DIRECTIONS[self.direction][0][1] * 2,
+            globals.HEIGHT / 2 - globals.DIR[self.direction][0][1],
+            globals.HEIGHT / 2 - globals.DIR[self.direction][0][1] * 2,
         ]
 
     def render(self, screen):
-        head_x = self.x_pos[0] * globals.TILE_SIZE
-        head_y = self.y_pos[0] * globals.TILE_SIZE
+        head_x = self.x_pos[0] * globals.TILE
+        head_y = self.y_pos[0] * globals.TILE
         screen.blit(self.head, (head_x, head_y))
         for i in range(1, len(self.x_pos)):
             screen.blit(
                 self.body,
-                (self.x_pos[i] * globals.TILE_SIZE, self.y_pos[i] * globals.TILE_SIZE),
+                (self.x_pos[i] * globals.TILE, self.y_pos[i] * globals.TILE),
             )
 
     def check_collision(self, new_x, new_y):
@@ -48,37 +46,38 @@ class Snake:
             self.is_dead = True
             pygame.quit()
         if (
-            len([pos for pos in zip(self.x_pos, self.y_pos) if pos == (new_x, new_y)])
+            len([pos for pos in zip(self.x_pos, self.y_pos)
+                 if pos == (new_x, new_y)])
             > 0
         ):
             print("Game Over! Snake collided with itself. size : ", self.size)
             self.is_dead = True
             pygame.quit()
 
-    def check_apple_collision(self, green_apple_1, green_apple_2, red_apple):
+    def check_apple_collision(self, g_apple_1, g_apple_2, r_apple):
         # print(new_x, new_y, ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y)
         if (self.x_pos[0], self.y_pos[0]) == (
-            green_apple_1.x,
-            green_apple_1.y,
+            g_apple_1.x,
+            g_apple_1.y,
         ):
             self.size += 1
             self.grow = True
-            green_apple_1.x, green_apple_1.y = gen.generate_new_apple(
-                self, green_apple_2.x, green_apple_2.y, red_apple.x, red_apple.y
+            g_apple_1.x, g_apple_1.y = gen.generate_new_apple(
+                self, g_apple_2.x, g_apple_2.y, r_apple.x, r_apple.y
             )
         elif (self.x_pos[0], self.y_pos[0]) == (
-            green_apple_2.x,
-            green_apple_2.y,
+            g_apple_2.x,
+            g_apple_2.y,
         ):
             self.size += 1
             self.grow = True
-            green_apple_2.x, green_apple_2.y = gen.generate_new_apple(
-                self, green_apple_1.x, green_apple_1.y, red_apple.x, red_apple.y
+            g_apple_2.x, g_apple_2.y = gen.generate_new_apple(
+                self, g_apple_1.x, g_apple_1.y, r_apple.x, r_apple.y
             )
 
         elif (self.x_pos[0], self.y_pos[0]) == (
-            red_apple.x,
-            red_apple.y,
+            r_apple.x,
+            r_apple.y,
         ):
             self.size -= 1
             self.reduce = True
@@ -86,24 +85,24 @@ class Snake:
                 print("Game Over! Snake size reduced to zero.")
                 self.is_dead = True
                 pygame.quit()
-            red_apple.x, red_apple.y = gen.generate_new_apple(
-                self, green_apple_2.x, green_apple_2.y, red_apple.x, red_apple.y
+            r_apple.x, r_apple.y = gen.generate_new_apple(
+                self, g_apple_2.x, g_apple_2.y, g_apple_1.x, g_apple_1.y
             )
-        return green_apple_1, green_apple_2, red_apple
+        return g_apple_1, g_apple_2, r_apple
 
     def move(self):
-        new_x = self.x_pos[0] + globals.DIRECTIONS[self.direction][0][0]
-        new_y = self.y_pos[0] + globals.DIRECTIONS[self.direction][0][1]
+        new_x = self.x_pos[0] + globals.DIR[self.direction][0][0]
+        new_y = self.y_pos[0] + globals.DIR[self.direction][0][1]
         self.check_collision(new_x, new_y)
         self.check_apple_collision
         if self.is_dead:
-            return -100
+            return -1000
         self.x_pos.insert(0, new_x)
         self.y_pos.insert(0, new_y)
 
         if self.grow:
             self.grow = False
-            return 10
+            return 20
         elif self.reduce:
             self.reduce = False
             self.x_pos.pop()
@@ -114,5 +113,5 @@ class Snake:
         else:
             self.x_pos.pop()
             self.y_pos.pop()
-            return -0.1
-        return -0.1
+            return -2
+        return -1

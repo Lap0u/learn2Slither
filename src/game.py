@@ -4,7 +4,9 @@ import src.globals as globals
 import src.generator as gen
 import numpy as np
 
-# ENV : 1 = WALL; 0 = EMPTY; 2 = GREEN APPLE; 3 = RED APPLE 4 = SNAKE HEAD; 5 = SNAKE BODY
+# ENV
+# 1 = WALL; 0 = EMPTY; 2 = GREEN APPLE;
+# 3 = RED APPLE 4 = SNAKE HEAD; 5 = SNAKE BODY
 
 
 class Game:
@@ -14,11 +16,15 @@ class Game:
         self.is_done = False
         self.reward = 0
         self.snake = Snake()
-        self.green_apple_1, self.green_apple_2, self.red_apple = gen.generate_apples(
+        self.green_apple_1, self.green_apple_2, self.red_apple = gen.gen_apple(
             self.snake
         )
         self.update_environment()
         self.snake_view = self.update_snake_view()
+
+    def terminal_display(self):
+        # print(self.environment.T)
+        pass
 
     def agent_render(self, screen, bg_image, tile, my_font, steps):
         screen.fill((0, 0, 0))
@@ -35,7 +41,7 @@ class Game:
             (62, 69, 129),
             (166, 166, 166),
         )
-        screen.blit(text_surface, (globals.TILE_SIZE // 4, globals.TILE_SIZE // 4))
+        screen.blit(text_surface, (globals.TILE // 4, globals.TILE // 4))
         pygame.display.flip()
 
     def update_snake_view(self):
@@ -67,20 +73,14 @@ class Game:
         self.reward = self.snake.move()
         self.update_environment()
         self.snake_view = self.update_snake_view()
-        if display is True and screen is not None and self.snake.is_dead is False:
+        if display is True and screen is not None and not self.snake.is_dead:
             self.agent_render(screen, bg_image, tile, my_font, step)
         else:
             self.terminal_display()
         return self.snake_view, self.reward, self.snake.is_dead
 
-    def terminal_display(self):
-        # print(self.environment.T)
-        pass
-
     def update_environment(self):
-        # print("Apple 1", self.green_apple_1.x, self.green_apple_1.y)
-        # print("Apple 2", self.green_apple_2.x, self.green_apple_2.y)
-        # print("Red Apple", self.red_apple.x, self.red_apple.y)
+
         for i in range(globals.WIDTH):
             for j in range(globals.HEIGHT):
                 if (
@@ -90,7 +90,8 @@ class Game:
                     or j == globals.HEIGHT - 1
                 ):
                     self.environment[i][j] = 1
-                elif (i, j) == (self.green_apple_1.x, self.green_apple_1.y) or (
+                elif (i, j) == (self.green_apple_1.x, self.green_apple_1.y
+                                ) or (
                     i,
                     j,
                 ) == (self.green_apple_2.x, self.green_apple_2.y):
@@ -106,13 +107,13 @@ class Game:
         # print("env", self.environment.T)
 
     def render_tiles(self, tile, screen):
-        for i in range(0, globals.WIDTH * globals.TILE_SIZE, globals.TILE_SIZE):
-            for j in range(0, globals.HEIGHT * globals.TILE_SIZE, globals.TILE_SIZE):
+        for i in range(0, globals.WIDTH * globals.TILE, globals.TILE):
+            for j in range(0, globals.HEIGHT * globals.TILE, globals.TILE):
                 if (
                     i == 0
-                    or i == globals.WIDTH * globals.TILE_SIZE - globals.TILE_SIZE
+                    or i == globals.WIDTH * globals.TILE - globals.TILE
                     or j == 0
-                    or j == globals.HEIGHT * globals.TILE_SIZE - globals.TILE_SIZE
+                    or j == globals.HEIGHT * globals.TILE - globals.TILE
                 ):
                     screen.blit(tile, (i, j))
 
