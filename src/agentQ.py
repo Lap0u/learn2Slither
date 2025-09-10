@@ -145,7 +145,7 @@ class AgentQ:
         process_view(x_view, head_y, axis="y")
         process_view(y_view, head_x, axis="x")
 
-        return reward * 0.1  # Scale down shaped reward
+        return reward * 1  # Scale down shaped reward
 
     def get_position_from_view(self, snake_view):
         """Extract snake head position from cross-view (where both views show snake head)"""
@@ -190,7 +190,7 @@ class AgentQ:
                 )
 
                 # Small reward for getting closer to apples
-                shaped_reward += new_dist_reward
+                shaped_reward += new_dist_reward - old_dist_reward
 
         return shaped_reward
 
@@ -293,10 +293,10 @@ class AgentQ:
                 new_snake_view, base_reward, done = game.step(action)
 
                 # Apply reward shaping using only cross-view information
-                # reward = self.get_shaped_reward(
-                #     old_snake_view, new_snake_view, base_reward
-                # )
-                reward = base_reward
+                reward = self.get_shaped_reward(
+                    old_snake_view, new_snake_view, base_reward
+                )
+                # reward = base_reward
 
                 memory.append(
                     (
@@ -380,7 +380,7 @@ class AgentQ:
             "policy_dqn": policy_dqn,
         }
 
-    def play(self):
+    def play(self, model_path="dqn_snake_model.pth"):
         pygame.init()
         pygame.font.init()  # you have to call this at the start,
         my_font = pygame.font.SysFont("Comic Sans MS", 30)
@@ -394,7 +394,6 @@ class AgentQ:
         bg_image.set_alpha(128)
         tile = pygame.image.load("assets/tile.png")
         model = DQN(globals.WIDTH + globals.HEIGHT + 4, 256, len(globals.DIRECTIONS))
-        model_path = "dqn_snake_model.pth"
         model.load_state_dict(torch.load(model_path, weights_only=True))
         game = Game()
 
@@ -426,3 +425,28 @@ class AgentQ:
             )
             num_steps += 1
         pygame.quit()
+
+    def multiplay(self, model_path="dqn_snake_model.pth", num_games=50):
+        model = DQN(globals.WIDTH + globals.HEIGHT + 4, 256, len(globals.DIRECTIONS))
+        model.load_state_dict(torch.load(model_path, weights_only=True))
+        max_size = 0
+        for i in range(num_games):
+            game = Game()
+            done = False
+            num_steps = 0
+            while not done:
+                current_direction = game.snake.direction
+                action = self.choose_action(
+                    game.snake_view,
+                    model,
+                    0,
+                    current_direction=current_direction,
+                )
+                _, _, done = game.step(
+                    action,
+                    display=True,
+                    step=num_steps,
+                )
+                num_steps += 1
+            max_size = max(max_size, game.snake.size)
+        print(f"Max size achieved in {num_games} games: {max_size}")

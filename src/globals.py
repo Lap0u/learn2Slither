@@ -9,11 +9,11 @@ DIRECTIONS = {
     "LEFT": [[-1, 0], 2],
     "RIGHT": [[1, 0], 3],
 }
-LEARNING_RATE = 0.2  # Impact on the weights
+LEARNING_RATE = 0.1  # Impact on the weights
 DISCOUNT_FACTOR = 0.95  # Value of future rewards
 EPSILON = 1  # Randomness in the agent's actions
-EPSILON_DECAY = 0.998  # Decay of randomness as the agent learns
-MIN_EPSILON = 0.02  # Minimum randomness
+EPSILON_DECAY = 0.995  # Decay of randomness as the agent learns
+MIN_EPSILON = 0.2  # Minimum randomness
 MAX_EPISODES = 3000  # Number of training episodes
 MAX_STEPS = 1000  # Maximum steps per episode
 MEMORY_SIZE = 30000
