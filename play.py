@@ -1,4 +1,7 @@
 # python3 play.py --mode multiplay --num_games 500 --path ./3000_green_rew_dqn_snake_model.pth -> max size 13
+# python3 play.py --mode multiplay --num_games 500 --path ./low_epsilon_3000_full_rew.pth -> max size 15
+# python3 play.py --mode multiplay --num_games 500 --path ./high_epsilon_3000_full_rew.pth -> max size 11 se bloque un peu
+# python3 play.py --mode multiplay --num_games 5000 --path ./low_epsilon_3000_full_rew.pth -> max size 17
 # python3 play.py --mode multiplay --num_games 500 --path ./3000_new_dqn_snake_model.pth -> max size 9
 # python3 play.py --mode multiplay --num_games 500 --path ./3000_no_reward_dqn_snake_model.pth -> max size 9 se bloque beaucoup
 #  python3 play.py --mode multiplay --num_games 500 --path ./3000_reward_full_dqn_snake_model.pth -> max size 11 se bloque un peu

@@ -134,18 +134,18 @@ class AgentQ:
 
                 if cell_value == 2:  # Green apple
                     reward += max(0, 2 - distance * 0.1)  # closer = better
-                # elif cell_value == 3:  # Red apple
-                #     reward -= max(0, 2 - distance * 0.1)  # closer = worse
-                # elif cell_value == 5:  # Snake body
-                #     reward -= max(0, 2 - distance * 0.1)  # closer = worse
-                # elif cell_value == 1:  # Wall
-                #     reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                elif cell_value == 3:  # Red apple
+                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                elif cell_value == 5:  # Snake body
+                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                elif cell_value == 1:  # Wall
+                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
 
         # Process both cross views
         process_view(x_view, head_y, axis="y")
         process_view(y_view, head_x, axis="x")
 
-        return reward * 1  # Scale down shaped reward
+        return reward * 1
 
     def get_position_from_view(self, snake_view):
         """Extract snake head position from cross-view (where both views show snake head)"""
