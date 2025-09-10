@@ -387,7 +387,7 @@ class AgentQ:
             "policy_dqn": policy_dqn,
         }
 
-    def play(self, model_path="dqn_snake_model.pth"):
+    def play(self, model_path="dqn_snake_model.pth", speed=50):
         pygame.init()
         pygame.font.init()  # you have to call this at the start,
         my_font = pygame.font.SysFont("Comic Sans MS", 30)
@@ -405,7 +405,7 @@ class AgentQ:
         done = False
         num_steps = 0
         while not done:
-            clock.tick(g.ROBOT_SPEED)
+            clock.tick(speed)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     done = False

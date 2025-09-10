@@ -28,11 +28,12 @@ if __name__ == "__main__":
         "--mode",
         choices=["play", "multiplay"],
     )
+    parser.add_argument('--speed', type=int, default=50)
     parser.add_argument("--path", type=str, default="dqn_snake_model.pth")
     parser.add_argument("--num_games", type=int, default=50)
     args = parser.parse_args()
     agent = AgentQ()
     if args.mode == "play":
-        agent.play(model_path=args.path)
+        agent.play(model_path=args.path, speed=args.speed)
     elif args.mode == "multiplay":
         agent.multiplay(model_path=args.path, num_games=args.num_games)
