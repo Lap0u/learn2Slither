@@ -7,6 +7,7 @@
 #  python3 play.py --mode multiplay --num_games 500 --path ./3000_reward_full_dqn_snake_model.pth -> max size 11 se bloque un peu
 # python3 play.py --mode multiplay --num_games 500 --path ./5000_basic_reward_dqn_snake_model.pth -> max size 12
 # python3 play.py --mode multiplay --num_games 500 --path ./5000_green_rew_dqn_snake_model.pth -> max size 11
+# python3 play.py --mode multiplay --num_games 5000 --path ./3000_lowlr_dqn_snake_model.pth -> max size 13
 from src.agentQ import AgentQ
 import argparse
 
@@ -20,7 +21,6 @@ if __name__ == "__main__":
     parser.add_argument("--num_games", type=int, default=50)
     args = parser.parse_args()
     agent = AgentQ()
-    # agent.play()
     if args.mode == "play":
         agent.play(model_path=args.path)
     elif args.mode == "multiplay":

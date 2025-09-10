@@ -9,7 +9,7 @@ DIRECTIONS = {
     "LEFT": [[-1, 0], 2],
     "RIGHT": [[1, 0], 3],
 }
-LEARNING_RATE = 0.1  # Impact on the weights
+LEARNING_RATE = 0.001  # Impact on the weights
 DISCOUNT_FACTOR = 0.95  # Value of future rewards
 EPSILON = 1  # Randomness in the agent's actions
 EPSILON_DECAY = 0.955  # Decay of randomness as the agent learns

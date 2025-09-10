@@ -123,27 +123,29 @@ class AgentQ:
         Distance-based reward shaping.
         - Green apple (2) = positive reward (bonus).
         - Red apple (3) = negative reward (malus).
-        - Snake body (4) = negative reward (malus).
+        - Snake body (5) = negative reward (malus).
         """
         reward = 0
 
         def process_view(view, head_pos, axis="y"):
-            nonlocal reward
+            loc_reward = 0
             for i, cell_value in enumerate(view):
                 distance = abs(i - head_pos)
 
                 if cell_value == 2:  # Green apple
-                    reward += max(0, 2 - distance * 0.1)  # closer = better
+                    loc_reward += max(0, 2 - distance * 0.1)  # closer = better
                 elif cell_value == 3:  # Red apple
-                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                    loc_reward -= max(0, 2 - distance * 0.1)  # closer = worse
                 elif cell_value == 5:  # Snake body
-                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                    loc_reward -= max(0, 2 - distance * 0.1)  # closer = worse
                 elif cell_value == 1:  # Wall
-                    reward -= max(0, 2 - distance * 0.1)  # closer = worse
+                    loc_reward -= max(0, 2 - distance * 0.1)  # closer = worse
+
+            return loc_reward
 
         # Process both cross views
-        process_view(x_view, head_y, axis="y")
-        process_view(y_view, head_x, axis="x")
+        reward += process_view(x_view, head_y, axis="y")
+        reward += process_view(y_view, head_x, axis="x")
 
         return reward * 1
 
@@ -254,7 +256,9 @@ class AgentQ:
 
         # Initialize networks
         target_dqn.load_state_dict(policy_dqn.state_dict())
-        self.optimizer = torch.optim.Adam(policy_dqn.parameters(), lr=0.001)
+        self.optimizer = torch.optim.Adam(
+            policy_dqn.parameters(), lr=globals.LEARNING_RATE
+        )
 
         # Training tracking
         sizes = np.zeros(globals.MAX_EPISODES)
@@ -265,7 +269,7 @@ class AgentQ:
         loss = 0
         best_avg_size = 0
 
-        current_epsilon = 0.9  # Start with high exploration
+        current_epsilon = globals.EPSILON  # Start with high exploration
 
         for episode in range(globals.MAX_EPISODES):
             print(f"Starting episode {episode + 1}/{globals.MAX_EPISODES}")
