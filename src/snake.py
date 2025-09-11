@@ -14,6 +14,7 @@ class Snake:
         self.body = pygame.image.load("assets/snake_body.png")
         self.head_xx = pygame.image.load("assets/snake_head_xx.png")
         self.direction = random.choice(list(globals.DIR.keys()))
+        self.x_pos, self.y_pos = self.spawn_snake()
         self.x_pos = [
             globals.WIDTH / 2,
             globals.WIDTH / 2 - globals.DIR[self.direction][0][0],
@@ -24,6 +25,21 @@ class Snake:
             globals.HEIGHT / 2 - globals.DIR[self.direction][0][1],
             globals.HEIGHT / 2 - globals.DIR[self.direction][0][1] * 2,
         ]
+
+    def spawn_snake(self):
+        x = random.randint(3, globals.WIDTH - 3)
+        y = random.randint(3, globals.HEIGHT - 3)
+        return ([
+            x,
+            x - globals.DIR[self.direction][0][0],
+            x - globals.DIR[self.direction][0][0] * 2,
+        ],
+            [
+                y,
+                y - globals.DIR[self.direction][0][1],
+                y - globals.DIR[self.direction][0][1] * 2,
+            ]
+        )
 
     def render(self, screen):
         head_x = self.x_pos[0] * globals.TILE
@@ -96,7 +112,7 @@ class Snake:
         self.check_collision(new_x, new_y)
         self.check_apple_collision
         if self.is_dead:
-            return -1000
+            return -100
         self.x_pos.insert(0, new_x)
         self.y_pos.insert(0, new_y)
 
@@ -113,5 +129,5 @@ class Snake:
         else:
             self.x_pos.pop()
             self.y_pos.pop()
-            return -2
+            return -1
         return -1

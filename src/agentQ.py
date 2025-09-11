@@ -145,7 +145,7 @@ class AgentQ:
         reward += process_view(x_view, head_y, axis="y")
         reward += process_view(y_view, head_x, axis="x")
 
-        return reward * 1
+        return reward * 0.1
 
     def get_position_from_view(self, snake_view):
         """Extract snake head position from cross-view
@@ -244,7 +244,7 @@ class AgentQ:
 
         return loss.item()
 
-    def train(self):
+    def train(self, sessions=3000):
         average_size_by_100 = []
         average_size_by_1000 = []
         memory = ReplayMemory(g.MEMORY_SIZE)
@@ -264,8 +264,8 @@ class AgentQ:
         self.optimizer = torch.optim.Adam(policy_dqn.parameters(), lr=g.LR)
 
         # Training tracking
-        sizes = np.zeros(g.MAX_EPISODES)
-        rewards_per_episode = np.zeros(g.MAX_EPISODES)
+        sizes = np.zeros(sessions)
+        rewards_per_episode = np.zeros(sessions)
         epsilon_history = []
         losses = []
         step_count = 0
@@ -274,8 +274,8 @@ class AgentQ:
 
         current_epsilon = g.EPSILON  # Start with high exploration
 
-        for episode in range(g.MAX_EPISODES):
-            print(f"Starting episode {episode + 1}/{g.MAX_EPISODES}")
+        for episode in range(sessions):
+            print(f"Starting episode {episode + 1}/{sessions}")
             game = Game()
             episode_reward = 0
             episode_steps = 0
@@ -300,10 +300,10 @@ class AgentQ:
                 new_snake_view, base_reward, done = game.step(action)
 
                 # Apply reward shaping using only cross-view information
-                reward = self.get_shaped_reward(
-                    old_snake_view, new_snake_view, base_reward
-                )
-                # reward = base_reward
+                # reward = self.get_shaped_reward(
+                #     old_snake_view, new_snake_view, base_reward
+                # )
+                reward = base_reward
 
                 memory.append(
                     (
@@ -387,7 +387,7 @@ class AgentQ:
             "policy_dqn": policy_dqn,
         }
 
-    def play(self, model_path="dqn_snake_model.pth", speed=50):
+    def play(self, model_path="dqn_snake_model.pth", speed=50, step_by_step=False):
         pygame.init()
         pygame.font.init()  # you have to call this at the start,
         my_font = pygame.font.SysFont("Comic Sans MS", 30)
@@ -404,14 +404,23 @@ class AgentQ:
 
         done = False
         num_steps = 0
+        should_step = False
+        if not step_by_step:
+            should_step = True
         while not done:
-            clock.tick(speed)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     done = False
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         done = False
+                    if step_by_step and event.key == pygame.K_SPACE:
+                        should_step = True
+            if not should_step:
+                continue
+            if step_by_step:
+                should_step = False
+            clock.tick(speed)
             current_direction = game.snake.direction
             action = self.choose_action(
                 game.snake_view,

@@ -14,7 +14,6 @@ DISCOUNT_FACTOR = 0.95  # Value of future rewards
 EPSILON = 1  # Randomness in the agent's actions
 EPSILON_DECAY = 0.955  # Decay of randomness as the agent learns
 MIN_EPSILON = 0.01  # Minimum randomness
-MAX_EPISODES = 3000  # Number of training episodes
 MAX_STEPS = 1000  # Maximum steps per episode
 MEMORY_SIZE = 30000
 BATCH_SIZE = 32  # Size of training batches

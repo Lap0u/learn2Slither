@@ -1,5 +1,5 @@
-# python3 play.py --mode multiplay --num_games 500 --path
-#  ./3000_green_rew_dqn_snake_model.pth -> max size 13
+# python3 play.py --mode multiplay --num_games 5000 --path
+#  ./3000_green_rew_dqn_snake_model.pth -> max size 15
 # python3 play.py --mode multiplay --num_games 500 --path
 #  ./low_epsilon_3000_full_rew.pth -> max size 15
 # python3 play.py --mode multiplay --num_games 500 --path
@@ -18,6 +18,10 @@
 #  ./5000_green_rew_dqn_snake_model.pth -> max size 11
 # python3 play.py --mode multiplay --num_games 5000 --path
 #  ./3000_lowlr_dqn_snake_model.pth -> max size 13
+# python3 play.py --mode multiplay --num_games 5000 --path
+#  ./basic_dqn_snake_model.pth -> max size 12
+# python3 play.py --mode multiplay --num_games 5000 --path
+#  ./low_epsilon_3000_no_rew.pth -> max size 10
 
 from src.agentQ import AgentQ
 import argparse
@@ -28,12 +32,13 @@ if __name__ == "__main__":
         "--mode",
         choices=["play", "multiplay"],
     )
+    parser.add_argument('--step-by-step', action='store_true')
     parser.add_argument('--speed', type=int, default=50)
     parser.add_argument("--path", type=str, default="dqn_snake_model.pth")
     parser.add_argument("--num_games", type=int, default=50)
     args = parser.parse_args()
     agent = AgentQ()
     if args.mode == "play":
-        agent.play(model_path=args.path, speed=args.speed)
+        agent.play(model_path=args.path, speed=args.speed, step_by_step=args.step_by_step)
     elif args.mode == "multiplay":
         agent.multiplay(model_path=args.path, num_games=args.num_games)
