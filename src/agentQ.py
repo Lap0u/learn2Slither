@@ -387,7 +387,8 @@ class AgentQ:
             "policy_dqn": policy_dqn,
         }
 
-    def play(self, model_path="dqn_snake_model.pth", speed=50, step_by_step=False):
+    def play(self, model_path="dqn_snake_model.pth", speed=50,
+             step_by_step=False):
         pygame.init()
         pygame.font.init()  # you have to call this at the start,
         my_font = pygame.font.SysFont("Comic Sans MS", 30)

@@ -15,16 +15,6 @@ class Snake:
         self.head_xx = pygame.image.load("assets/snake_head_xx.png")
         self.direction = random.choice(list(globals.DIR.keys()))
         self.x_pos, self.y_pos = self.spawn_snake()
-        self.x_pos = [
-            globals.WIDTH / 2,
-            globals.WIDTH / 2 - globals.DIR[self.direction][0][0],
-            globals.WIDTH / 2 - globals.DIR[self.direction][0][0] * 2,
-        ]
-        self.y_pos = [
-            globals.HEIGHT / 2,
-            globals.HEIGHT / 2 - globals.DIR[self.direction][0][1],
-            globals.HEIGHT / 2 - globals.DIR[self.direction][0][1] * 2,
-        ]
 
     def spawn_snake(self):
         x = random.randint(3, globals.WIDTH - 3)

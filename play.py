@@ -39,6 +39,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     agent = AgentQ()
     if args.mode == "play":
-        agent.play(model_path=args.path, speed=args.speed, step_by_step=args.step_by_step)
+        agent.play(model_path=args.path, speed=args.speed,
+                   step_by_step=args.step_by_step)
     elif args.mode == "multiplay":
         agent.multiplay(model_path=args.path, num_games=args.num_games)
