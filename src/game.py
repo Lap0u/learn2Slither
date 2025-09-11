@@ -34,7 +34,6 @@ class Game:
         self.green_apple_2.render(screen)
         self.red_apple.render(screen)
         self.snake.render(screen)
-        # if you want to use this module.
         text_surface = my_font.render(
             f"Size: {self.snake.size} steps {steps}",
             False,
@@ -104,7 +103,6 @@ class Game:
                     self.environment[i][j] = 5
                 else:
                     self.environment[i][j] = 0
-        # print("env", self.environment.T)
 
     def render_tiles(self, tile, screen):
         for i in range(0, globals.WIDTH * globals.TILE, globals.TILE):

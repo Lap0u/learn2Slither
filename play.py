@@ -5,7 +5,7 @@
 # python3 play.py --mode multiplay --num_games 500 --path
 #  ./high_epsilon_3000_full_rew.pth -> max size 11 se bloque un peu
 # python3 play.py --mode multiplay --num_games 5000 --path
-#  ./low_epsilon_3000_full_rew.pth -> max size 17
+#  ./low_epsilon_3000_full_rew.pth -> max size 16
 # python3 play.py --mode multiplay --num_games 500 --path
 #  ./3000_new_dqn_snake_model.pth -> max size 9
 # python3 play.py --mode multiplay --num_games 500 --path

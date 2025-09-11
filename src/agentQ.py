@@ -65,18 +65,14 @@ class AgentQ:
         if isinstance(snake_view, tuple) and len(snake_view) == 2:
             x_view, y_view = snake_view
 
-            # Normalize the view values (0-5 range to 0-1 range)
             x_view_norm = np.array(x_view, dtype=np.float32) / 5.0
             y_view_norm = np.array(y_view, dtype=np.float32) / 5.0
 
-            # Get direction encoding
             dir_encod = self.get_direction_encoding(current_direction)
 
-            # Combine cross-view and direction
             full_state = np.concatenate([x_view_norm, y_view_norm, dir_encod])
 
         else:
-            # Fallback for invalid state
             full_state = np.zeros(self.state_size)
 
         return torch.tensor(full_state, dtype=torch.float32)
@@ -104,7 +100,6 @@ class AgentQ:
                 state_tensor = self.state_to_dqn_input(snake_view, curr_dir)
                 q_values = policy_dqn(state_tensor.unsqueeze(0)).squeeze()
 
-                # Mask out invalid dir
                 valid_indices = [list(g.DIR.keys()).index(d) for d in dir]
                 masked_q_values = torch.full_like(q_values, float("-inf"))
                 masked_q_values[valid_indices] = q_values[valid_indices]
@@ -190,7 +185,6 @@ class AgentQ:
                     new_x_view, new_y_view, new_head_x, new_head_y
                 )
 
-                # Small reward for getting closer to apples
                 shaped_reward += new_dist_reward - old_dist_reward
 
         return shaped_reward
@@ -221,11 +215,9 @@ class AgentQ:
         reward_tensors = torch.tensor(rewards, dtype=torch.float32)
         done_tensors = torch.tensor(dones, dtype=torch.bool)
 
-        # Current Q-values for the taken actions
         q_values = policy_dqn(state_tensors)
         q_values = q_values.gather(1, action_tensors.unsqueeze(1)).squeeze(1)
 
-        # Next Q-values from target network
         with torch.no_grad():
             next_q_values = target_dqn(next_state_tensors).max(1)[0]
             target_q_values = (
@@ -233,10 +225,8 @@ class AgentQ:
                 + g.DISCOUNT_FACTOR * next_q_values * (~done_tensors).float()
             )
 
-        # Compute loss
         loss = self.loss_fn(q_values, target_q_values)
 
-        # Optimize the policy network
         self.optimizer.zero_grad()
         loss.backward()
         torch.nn.utils.clip_grad_norm_(policy_dqn.parameters(), max_norm=1.0)
@@ -244,26 +234,26 @@ class AgentQ:
 
         return loss.item()
 
-    def train(self, sessions=3000):
+    def train(self, sessions=3000, model=None):
         average_size_by_100 = []
         average_size_by_1000 = []
         memory = ReplayMemory(g.MEMORY_SIZE)
         policy_dqn = DQN(
             in_states=self.state_size,
-            h1_nodes=256,  # Smaller network for simpler state space
+            h1_nodes=256,
             out_actions=self.num_actions,
         )
+        if model is not None:
+            policy_dqn.load_state_dict(torch.load(model, weights_only=True))
         target_dqn = DQN(
             in_states=self.state_size,
             h1_nodes=256,
             out_actions=self.num_actions,
         )
 
-        # Initialize networks
         target_dqn.load_state_dict(policy_dqn.state_dict())
         self.optimizer = torch.optim.Adam(policy_dqn.parameters(), lr=g.LR)
 
-        # Training tracking
         sizes = np.zeros(sessions)
         rewards_per_episode = np.zeros(sessions)
         epsilon_history = []
@@ -284,19 +274,15 @@ class AgentQ:
             while not done and episode_steps < g.MAX_STEPS:
                 curr_dir = game.snake.direction
 
-                # Choose action using cross-view only
                 action = self.choose_action(
                     game.snake_view, policy_dqn, current_epsilon, curr_dir
                 )
 
-                # Convert action to index for storage
                 action_idx = list(g.DIR.keys()).index(action)
 
-                # Store the current state before taking action
                 old_snake_view = game.snake_view
                 old_direction = curr_dir
 
-                # Take action and observe result
                 new_snake_view, base_reward, done = game.step(action)
 
                 # Apply reward shaping using only cross-view information
@@ -321,13 +307,11 @@ class AgentQ:
                 episode_steps += 1
                 step_count += 1
 
-                # Train the network if we have enough samples
                 if len(memory) >= g.BATCH_SIZE:
                     mini_batch = memory.sample(g.BATCH_SIZE)
                     loss = self.optimize(mini_batch, policy_dqn, target_dqn)
                     losses.append(loss)
 
-                    # Decay epsilon more gradually for cross-view learning
                     current_epsilon = max(
                         current_epsilon * g.EPSILON_DECAY, g.MIN_EPSILON
                     )
@@ -336,11 +320,9 @@ class AgentQ:
                     if step_count % 1000 == 0:  # Less frequent updates
                         target_dqn.load_state_dict(policy_dqn.state_dict())
 
-            # Record episode statistics
             sizes[episode] = game.snake.size
             rewards_per_episode[episode] = episode_reward
             epsilon_history.append(current_epsilon)
-            # print("Loss : ", loss)
             if (episode + 1) % 1000 == 0 and episode > 0:
                 print("Array chunk", sizes[max(0, episode - 1000):episode + 1])
                 average_size_by_1000.append(
@@ -350,7 +332,6 @@ class AgentQ:
                 average_size_by_100.append(
                     np.mean(sizes[max(0, episode - 100):episode + 1])
                 )
-            # Print progress
             if episode % 100 == 0:
                 avg_reward = np.mean(
                     rewards_per_episode[max(0, episode - 100):episode + 1]
@@ -390,7 +371,7 @@ class AgentQ:
     def play(self, model_path="dqn_snake_model.pth", speed=50,
              step_by_step=False):
         pygame.init()
-        pygame.font.init()  # you have to call this at the start,
+        pygame.font.init()
         my_font = pygame.font.SysFont("Comic Sans MS", 30)
 
         screen = pygame.display.set_mode((g.WIDTH * g.TILE, g.HEIGHT * g.TILE))

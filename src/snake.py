@@ -61,7 +61,6 @@ class Snake:
             pygame.quit()
 
     def check_apple_collision(self, g_apple_1, g_apple_2, r_apple):
-        # print(new_x, new_y, ga_1_x, ga_1_y, ga_2_x, ga_2_y, ra_1_x, ra_1_y)
         if (self.x_pos[0], self.y_pos[0]) == (
             g_apple_1.x,
             g_apple_1.y,
