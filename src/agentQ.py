@@ -244,7 +244,12 @@ class AgentQ:
             out_actions=self.num_actions,
         )
         if model is not None:
-            policy_dqn.load_state_dict(torch.load(model, weights_only=True))
+            print("Loading model...")
+            try:
+                policy_dqn.load_state_dict(torch.load(model, weights_only=True))
+            except Exception as e:
+                print(f"Error loading model: {e}")
+                return
         target_dqn = DQN(
             in_states=self.state_size,
             h1_nodes=256,
@@ -381,7 +386,12 @@ class AgentQ:
         bg_image.set_alpha(128)
         tile = pygame.image.load("assets/tile.png")
         model = DQN(g.WIDTH + g.HEIGHT + 4, 256, len(g.DIR))
-        model.load_state_dict(torch.load(model_path, weights_only=True))
+        print("Loading model...")
+        try:
+            model.load_state_dict(torch.load(model_path, weights_only=True))
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            return
         game = Game()
 
         done = False
@@ -424,7 +434,13 @@ class AgentQ:
 
     def multiplay(self, model_path="dqn_snake_model.pth", num_games=50):
         model = DQN(g.WIDTH + g.HEIGHT + 4, 256, len(g.DIR))
-        model.load_state_dict(torch.load(model_path, weights_only=True))
+        print("Loading model...")
+        try:
+            model.load_state_dict(torch.load(model_path, weights_only=True))
+        except Exception as e:
+            print(f"Error loading model: {e}")
+            return
+        
         max_size = 0
         for i in range(num_games):
             game = Game()

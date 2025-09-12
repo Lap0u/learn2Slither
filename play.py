@@ -37,6 +37,14 @@ if __name__ == "__main__":
     parser.add_argument("--path", type=str, default="dqn_snake_model.pth")
     parser.add_argument("--num_games", type=int, default=50)
     args = parser.parse_args()
+    if (args.mode is None):
+        raise ValueError("You must specify a mode: play or multiplay")
+    if (args.path is None):
+        raise ValueError("You must specify a model path")
+    if (args.num_games <= 0):
+        raise ValueError("The number of games must be greater than 0")
+    if (args.speed <= 0):
+        raise ValueError("The speed of the game must be greater than 0")
     agent = AgentQ()
     if args.mode == "play":
         agent.play(model_path=args.path, speed=args.speed,
